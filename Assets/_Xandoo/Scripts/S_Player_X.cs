@@ -36,12 +36,9 @@ public class S_Player_X : NetworkedBehaviour
 
     public void CastSpell()
     {
-        if (!IsLocalPlayer)
-        {
-            GameObject spell = Instantiate(spellSettings.GetTrailFX(), spellSpawnLocation.position, spellSpawnLocation.rotation);
-            spell.GetComponent<NetworkedObject>().Spawn();
-            spell.GetComponent<Rigidbody>().AddForce(spell.transform.forward * spellSettings.GetSpeed());
-        }
+        GameObject spell = Instantiate(spellSettings.GetTrailFX(), spellSpawnLocation.position, spellSpawnLocation.rotation);
+        spell.GetComponent<NetworkedObject>().Spawn();
+        spell.GetComponent<Rigidbody>().AddForce(spell.transform.forward * spellSettings.GetSpeed());
     }
 
     public void Heal(int amount)

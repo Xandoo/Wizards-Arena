@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using MLAPI;
+using MLAPI.Messaging;
 
 public class AnimatorEventCatch : NetworkedBehaviour
 {
@@ -9,9 +10,19 @@ public class AnimatorEventCatch : NetworkedBehaviour
 
     void CastSpell()
     {
-        if (IsLocalPlayer)
-            InvokeServerRpc(player.CastSpell);
+        if (!IsHost)
+        {
+            InvokeServerRpc(RequestCastSpellOnServer);
+        }
         else
+        {
             player.CastSpell();
+        }
+    }
+
+    [ServerRPC]
+    void RequestCastSpellOnServer()
+    {
+        player.CastSpell();
     }
 }
