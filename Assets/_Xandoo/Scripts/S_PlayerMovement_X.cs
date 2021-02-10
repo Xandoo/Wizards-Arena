@@ -25,6 +25,7 @@ public class S_PlayerMovement_X : NetworkedBehaviour
     private Vector3 move;
     private Vector2 mouseInput;
     private S_Player_X player;
+    [SerializeField]
     private Animator[] anim;
 
     private float pitch;
@@ -44,8 +45,9 @@ public class S_PlayerMovement_X : NetworkedBehaviour
         {
             cc = GetComponent<CharacterController>();
             player = GetComponent<S_Player_X>();
-            anim = GetComponentsInChildren<Animator>();
+            
         }
+        //anim = GetComponentsInChildren<Animator>();
     }
 
     // Update is called once per frame
