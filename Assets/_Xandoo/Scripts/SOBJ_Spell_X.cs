@@ -19,6 +19,8 @@ public class SOBJ_Spell_X : ScriptableObject
     [Tooltip("Time in seconds to cast spell.")]
     float castTime = 0.4f;
     [SerializeField]
+    float cooldown = 1f;
+    [SerializeField]
     float speed = 5f;
     [SerializeField]
     int damage = 3;
@@ -61,6 +63,11 @@ public class SOBJ_Spell_X : ScriptableObject
     public float GetSpeed()
     {
         return speed;
+    }
+
+    public float GetCooldown()
+    {
+        return cooldown;
     }
 
     public GameObject GetPreCastFX()

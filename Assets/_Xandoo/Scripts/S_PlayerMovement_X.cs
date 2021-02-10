@@ -29,6 +29,7 @@ public class S_PlayerMovement_X : NetworkedBehaviour
     private Animator[] anim;
 
     private float pitch;
+    private float cooldownTimeStamp;
 
     [SerializeField]
     private bool isGrounded;
@@ -67,10 +68,17 @@ public class S_PlayerMovement_X : NetworkedBehaviour
 
     void Attack()
     {
-        if (Input.GetButtonDown("Fire1"))
+        if (Input.GetButton("Fire1"))
         {
-            anim[0].SetTrigger("Attack");
-            anim[1].SetTrigger("Attack");
+            if (cooldownTimeStamp <= Time.time)
+            {
+                //This is where animaiton time remapping should go for changing cast time.
+                //I am not at that point yet. I just wanna make something fun.
+                anim[0].SetTrigger("Attack");
+                anim[1].SetTrigger("Attack");
+                StartCoroutine(player.CastSpell());
+                cooldownTimeStamp = Time.time + player.spellSettings.GetCooldown();
+            }
         }
     }
 

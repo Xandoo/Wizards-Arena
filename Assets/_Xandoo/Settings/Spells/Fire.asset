@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   element: 0
   castTime: 0.4
-  speed: 400
+  speed: 800
   damage: 3
   damageOverTime: 2
   areaOfEffect: 4

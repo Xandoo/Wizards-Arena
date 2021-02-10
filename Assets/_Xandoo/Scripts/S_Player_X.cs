@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using MLAPI;
+using MLAPI.Messaging;
+using MLAPI.NetworkedVar;
 
 public class S_Player_X : NetworkedBehaviour
 {
@@ -9,6 +11,12 @@ public class S_Player_X : NetworkedBehaviour
 
     public SOBJ_PlayerStats_X playerStats;
     public SOBJ_Spell_X spellSettings;
+
+    public int health;
+
+    public NetworkedVar<int> Health = new NetworkedVar<int>(new NetworkedVarSettings { WritePermission = NetworkedVarPermission.OwnerOnly });
+    public NetworkedVar<int> Mana = new NetworkedVar<int>(new NetworkedVarSettings { WritePermission = NetworkedVarPermission.OwnerOnly });
+    public NetworkedVar<int> Armor = new NetworkedVar<int>(new NetworkedVarSettings { WritePermission = NetworkedVarPermission.OwnerOnly });
 
     // Start is called before the first frame update
     void Start()
@@ -26,6 +34,11 @@ public class S_Player_X : NetworkedBehaviour
             children[1].gameObject.SetActive(true);
             children[0].gameObject.SetActive(false);
         }
+
+        Health.Value = playerStats.GetMaxHealth();
+        health = playerStats.GetMaxHealth();
+        Mana.Value = playerStats.GetMaxMana();
+        //Armor.Value = playerStats.GetMaxHealth();
     }
 
     // Update is called once per frame
@@ -34,7 +47,26 @@ public class S_Player_X : NetworkedBehaviour
         
     }
 
-    public void CastSpell()
+    public IEnumerator CastSpell()
+    {
+        yield return new WaitForSeconds(spellSettings.GetCastTime());
+        if (IsHost)
+        {
+            SpawnProjectile();
+        }
+        else
+        {
+            InvokeServerRpc(RequestSpawnProjectileOnServer);
+        }
+    }
+
+    [ServerRPC]
+    void RequestSpawnProjectileOnServer()
+    {
+        SpawnProjectile();
+    }
+
+    void SpawnProjectile()
     {
         GameObject spell = Instantiate(spellSettings.GetTrailFX(), spellSpawnLocation.position, spellSpawnLocation.rotation);
         spell.GetComponent<NetworkedObject>().Spawn();
@@ -43,12 +75,20 @@ public class S_Player_X : NetworkedBehaviour
 
     public void Heal(int amount)
     {
-       playerStats.Health += amount;
+        Health.Value += amount;
+        health += amount;
+        Mathf.Clamp(Health.Value, 0, playerStats.GetMaxHealth());
     }
 
     public void Damage(int amount)
     {
-        playerStats.Health -= amount;
+        Health.Value -= amount;
+        health -= amount;
+        Mathf.Clamp(Health.Value, 0, playerStats.GetMaxHealth());
+    }
 
+    private void OnCollisionEnter(Collision collision)
+    {
+        Debug.Log("Hit");
     }
 }
