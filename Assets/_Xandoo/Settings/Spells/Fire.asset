@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 17b7c67f14e37324fbdd0973092af72a, type: 3}
+  m_Name: Fire
+  m_EditorClassIdentifier: 
+  element: 0
+  castTime: 0.4
+  speed: 400
+  damage: 3
+  damageOverTime: 2
+  areaOfEffect: 4
+  preCastFX: {fileID: 0}
+  trailFX: {fileID: 128572, guid: bb886351f7eed15408c11563f5caf572, type: 3}
+  hitFX: {fileID: 0}
