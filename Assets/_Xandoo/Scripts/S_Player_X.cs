@@ -71,6 +71,7 @@ public class S_Player_X : NetworkedBehaviour
         GameObject spell = Instantiate(spellSettings.GetTrailFX(), spellSpawnLocation.position, spellSpawnLocation.rotation);
         spell.GetComponent<NetworkedObject>().Spawn();
         spell.GetComponent<Rigidbody>().AddForce(spell.transform.forward * spellSettings.GetSpeed());
+		spell.GetComponent<ETFXProjectileScript>().Owner = this;
     }
 
     public void Heal(int amount)
@@ -80,15 +81,19 @@ public class S_Player_X : NetworkedBehaviour
         Mathf.Clamp(Health.Value, 0, playerStats.GetMaxHealth());
     }
 
-    public void Damage(int amount)
+    public void Damage(int amount, S_Player_X damager = null)
     {
-        Health.Value -= amount;
-        health -= amount;
-        Mathf.Clamp(Health.Value, 0, playerStats.GetMaxHealth());
-    }
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        Debug.Log("Hit");
+		if (damager)
+		{
+			Health.Value -= amount;
+			health -= amount;
+			Mathf.Clamp(Health.Value, 0, playerStats.GetMaxHealth());
+		}
+		else
+		{
+			Health.Value -= amount;
+			health -= amount;
+			Mathf.Clamp(Health.Value, 0, playerStats.GetMaxHealth());
+		}
     }
 }

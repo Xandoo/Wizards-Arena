@@ -17,6 +17,9 @@ public class S_PlayerMovement_X : NetworkedBehaviour
     public float sensitivity = 3f;
     public float groundCheckDistance = 5f;
     public LayerMask groundLayer;
+	
+	[SerializeField]
+	private bool isSpectating = false;
     
 
     [SerializeField]
@@ -33,6 +36,8 @@ public class S_PlayerMovement_X : NetworkedBehaviour
 
     [SerializeField]
     private bool isGrounded;
+
+	private float colliderHeight;
 
     // Start is called before the first frame update
     void Start()
@@ -58,15 +63,41 @@ public class S_PlayerMovement_X : NetworkedBehaviour
         {
             MovePlayer();
             RotatePlayer();
-            JumpPlayer();
-            CheckIsGrounded();
-            ApplyGravity();
-            Attack();
+
+			if (!isSpectating)
+			{
+				JumpPlayer();
+				CheckIsGrounded();
+				ApplyGravity();
+				Attack();
+			}
+			else
+			{
+				specVerticalMovement();
+			}
         }
 
     }
 
-    void Attack()
+	private void specVerticalMovement()
+	{
+		Vector3 vMove = new Vector3();
+		if (Input.GetButton("Jump"))
+		{
+			Debug.Log("Moving up");
+			vMove = Vector3.up * Time.deltaTime;
+		}
+		if (Input.GetButton("Crouch"))
+		{
+			Debug.Log("Moving down");
+			vMove = Vector3.down * Time.deltaTime;
+		}
+		//vMove = Vector3.ClampMagnitude(move, 1f);
+
+		cc.Move(vMove * speed);
+	}
+
+	void Attack()
     {
         if (Input.GetButton("Fire1"))
         {
@@ -149,4 +180,21 @@ public class S_PlayerMovement_X : NetworkedBehaviour
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(groundCheckOrigin.position, groundCheckDistance);
     }
+
+	public void SetSpectating()
+	{
+		isSpectating = true;
+
+		CharacterController cc = GetComponent<CharacterController>();
+		colliderHeight = cc.height;
+		cc.height = 0;
+	}
+
+	public void SetNotSpectating()
+	{
+		isSpectating = false;
+
+		CharacterController cc = GetComponent<CharacterController>();
+		cc.height = colliderHeight;
+	}
 }
