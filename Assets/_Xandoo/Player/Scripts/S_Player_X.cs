@@ -12,9 +12,9 @@ public class S_Player_X : NetworkedBehaviour
     public SOBJ_PlayerStats_X playerStats;
     public SOBJ_Spell_X spellSettings;
 
-    public int teamID = -1;
+    public NetworkedVarInt teamID = new NetworkedVarInt(new NetworkedVarSettings { WritePermission = NetworkedVarPermission.ServerOnly }, -1);
 
-    public NetworkedVarInt Health = new NetworkedVarInt(new NetworkedVarSettings { WritePermission = NetworkedVarPermission.OwnerOnly });
+	public NetworkedVarInt Health = new NetworkedVarInt(new NetworkedVarSettings { WritePermission = NetworkedVarPermission.OwnerOnly });
 
     // Start is called before the first frame update
     void Start()
@@ -82,7 +82,6 @@ public class S_Player_X : NetworkedBehaviour
 		{
 			Health.Value -= amount;
 			Mathf.Clamp(Health.Value, 0, playerStats.GetMaxHealth());
-			Debug.Log(damager.GetComponent<NetworkedObject>().NetworkId);
 
 			if (IsHost)
 			{
