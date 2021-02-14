@@ -13,7 +13,8 @@ MonoBehaviour:
   m_Name: Fire
   m_EditorClassIdentifier: 
   element: 0
-  castTime: 0.4
+  castTime: 1
+  cooldown: 0.5
   speed: 800
   damage: 3
   damageOverTime: 2
