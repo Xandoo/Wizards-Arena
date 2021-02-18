@@ -9,13 +9,13 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 {
 	public SOBJ_TDMSettings_X tdmSettings;
 
-	public List<S_Player_X> teamA { get; }
-	public List<S_Player_X> teamB { get; }
-	public List<S_Player_X> spectating { get; }
+	public List<S_Player_X> teamA { get; private set; }
+	public List<S_Player_X> teamB { get; private set;  }
+	public List<S_Player_X> spectating { get; private set; }
 
 	private bool teamSelect = true;
 
-	public S_TeamDeathMatch_X()
+	private void Start()
 	{
 		teamA = new List<S_Player_X>(tdmSettings.teamAMaxPlayers);
 		teamB = new List<S_Player_X>(tdmSettings.teamBMaxPlayers);

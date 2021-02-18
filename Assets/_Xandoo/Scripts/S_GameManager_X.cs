@@ -12,8 +12,7 @@ public class S_GameManager_X : NetworkedBehaviour
 
 	public static S_GameManager_X Singleton { get; }
 
-	[SerializeField]
-	public GameObject gameModePrefab;
+	public S_GameMode_X gameModePrefab;
 
 
 	private void Awake()
