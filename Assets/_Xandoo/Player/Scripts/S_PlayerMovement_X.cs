@@ -51,7 +51,7 @@ public class S_PlayerMovement_X : NetworkedBehaviour
         {
             cc = GetComponent<CharacterController>();
             player = GetComponent<S_Player_X>();
-            
+			Cursor.lockState = CursorLockMode.Locked;
         }
         //anim = GetComponentsInChildren<Animator>();
     }
