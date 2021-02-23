@@ -4,6 +4,10 @@ using UnityEngine;
 using MLAPI;
 using MLAPI.Messaging;
 using MLAPI.NetworkedVar;
+using MLAPI.Serialization;
+using System.Security.Policy;
+using System.IO;
+using MLAPI.Serialization.Pooled;
 
 public class S_Player_X : NetworkedBehaviour
 {
@@ -16,8 +20,11 @@ public class S_Player_X : NetworkedBehaviour
 
 	public NetworkedVarInt Health = new NetworkedVarInt(new NetworkedVarSettings { WritePermission = NetworkedVarPermission.OwnerOnly });
 
-    // Start is called before the first frame update
-    void Start()
+	public SkinnedMeshRenderer[] bodyParts;
+
+
+	// Start is called before the first frame update
+	void Start()
     {
         
         if (IsLocalPlayer)
@@ -104,5 +111,21 @@ public class S_Player_X : NetworkedBehaviour
 	private void UpdateHealthBarOfDamagedPlayer(S_PlayerCanvas_X can, int healthValue)
 	{
 		can.healthBar.value = healthValue;
+	}
+
+	[ClientRPC]
+	public void SetPosition(Vector3 pos)
+	{
+		transform.position = pos;
+	}
+
+	[ClientRPC]
+	public void ChangeMaterial(Material material)
+	{
+		foreach (SkinnedMeshRenderer meshRenderer in bodyParts)
+		{
+			Debug.Log("Set " + meshRenderer + " materials to " + material);
+			meshRenderer.material = material;
+		}
 	}
 }

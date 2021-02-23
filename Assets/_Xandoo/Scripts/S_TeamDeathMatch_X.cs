@@ -7,11 +7,16 @@ using MLAPI.Connection;
 
 public class S_TeamDeathMatch_X : S_GameMode_X
 {
+	public Transform[] doors;
+	public S_SpawnPoint_X[] spawnPoints;
 	public SOBJ_TDMSettings_X tdmSettings;
 
 	public List<S_Player_X> teamA { get; private set; }
-	public List<S_Player_X> teamB { get; private set;  }
+	public List<S_Player_X> teamB { get; private set; }
 	public List<S_Player_X> spectating { get; private set; }
+
+	private List<S_SpawnPoint_X> teamASpawn;
+	private List<S_SpawnPoint_X> teamBSpawn;
 
 	private bool teamSelect = true;
 
@@ -20,18 +25,43 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 		teamA = new List<S_Player_X>(tdmSettings.teamAMaxPlayers);
 		teamB = new List<S_Player_X>(tdmSettings.teamBMaxPlayers);
 		spectating = new List<S_Player_X>(tdmSettings.spectatingMaxPlayers);
-	}
+		teamASpawn = new List<S_SpawnPoint_X>();
+		teamBSpawn = new List<S_SpawnPoint_X>();
 
-	public override void PlayerConnected(ulong clientId)
+		foreach (S_SpawnPoint_X point in spawnPoints)
+		{
+			switch (point.teamID)
+			{
+				case 0:
+					teamASpawn.Add(point);
+					break;
+				case 1:
+					teamBSpawn.Add(point);
+					break;
+			}
+		}
+}
+	//[ServerRPC(RequireOwnership = false)]
+	public override void PlayerConnected(ulong clientObj)
 	{
-		/*NetworkingManager.Singleton.ConnectedClients.TryGetValue(clientId, out NetworkedClient client);
-		Debug.Log(client.PlayerObject);
-		if (client.PlayerObject.IsLocalPlayer)
-			InvokeServerRpc(AssignTeam, client.PlayerObject.GetComponent<S_Player_X>());
-		else
-			AssignTeam(client.PlayerObject.GetComponent<S_Player_X>());*/
+		NetworkingManager.Singleton.ConnectedClients.TryGetValue(clientObj, out NetworkedClient client);
+		Debug.Log(client.PlayerObject.gameObject + " has connected.");
+
+		AssignTeam(clientObj);
+		UpdateConnectedPlayers();
 	}
 
+	private void UpdateConnectedPlayers()
+	{
+		NetworkedClient[] clients = NetworkingManager.Singleton.ConnectedClientsList.ToArray();
+		foreach (NetworkedClient client in clients)
+		{
+
+		}
+		
+	}
+
+	[ServerRPC(RequireOwnership = false)]
 	public override void PlayerDisconnected(ulong clientId)
 	{
 		throw new System.NotImplementedException();
@@ -41,25 +71,99 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 	{
 		Debug.Log("Server Has Started");
 		NetworkedClient client = NetworkingManager.Singleton.ConnectedClientsList[0];
-		AssignTeam(client.PlayerObject.GetComponent<S_Player_X>());
+		AssignTeam(client.PlayerObject.OwnerClientId);
 	}
 
-	[ServerRPC(RequireOwnership = false)]
-	void AssignTeam(S_Player_X p)
+	
+	void AssignTeam(ulong obj)
 	{
+		NetworkingManager.Singleton.ConnectedClients.TryGetValue(obj, out NetworkedClient client);
+		S_Player_X p = client.PlayerObject.GetComponent<S_Player_X>();
 		if (teamSelect)
 		{
 			teamA.Add(p);
 			p.teamID.Value = 0;
+			if (!p.GetComponent<NetworkedObject>().IsLocalPlayer)
+			{
+				InvokeClientRpcOnClient(SetPlayerPosition, obj, p, teamASpawn[Random.Range(0, teamASpawn.Count - 1)].transform.position);
+				foreach (S_Player_X player in teamA)
+				{
+					InvokeClientRpcOnClient(SetTeamMaterials, obj, player, true);
+				}
+				foreach (S_Player_X player in teamB)
+				{
+					InvokeClientRpcOnClient(SetTeamMaterials, obj, player, false);
+				}
+			}
+			else
+			{
+				p.transform.position = teamASpawn[Random.Range(0, teamASpawn.Count - 1)].transform.position;
+				foreach (S_Player_X player in teamA)
+				{
+					SetTeamMaterials(player, true);
+				}
+				foreach (S_Player_X player in teamB)
+				{
+					SetTeamMaterials(player, false);
+				}
+			}
+			
 			teamSelect = !teamSelect;
 		}
 		else
 		{
 			teamB.Add(p);
 			p.teamID.Value = 1;
+
+			if (!p.GetComponent<NetworkedObject>().IsLocalPlayer)
+			{
+				InvokeClientRpcOnClient(SetPlayerPosition, obj, p, teamBSpawn[Random.Range(0, teamBSpawn.Count - 1)].transform.position);
+
+				foreach (S_Player_X player in teamB)
+				{
+					InvokeClientRpcOnClient(SetTeamMaterials, obj, player, true);
+				}
+				foreach (S_Player_X player in teamA)
+				{
+					InvokeClientRpcOnClient(SetTeamMaterials, obj, player, false);
+				}
+			}
+			else
+			{
+				p.transform.position = teamBSpawn[Random.Range(0, teamBSpawn.Count - 1)].transform.position;
+				foreach (S_Player_X player in teamB)
+				{
+					SetTeamMaterials(player, true);
+				}
+				foreach (S_Player_X player in teamA)
+				{
+					SetTeamMaterials(player, false);
+				}
+			}
+
 			teamSelect = !teamSelect;
 		}
 	}
+
+	[ClientRPC]
+	void SetPlayerPosition(S_Player_X p, Vector3 pos)
+	{
+		p.SetPosition(pos);
+	}
+	
+	[ClientRPC]
+	void SetTeamMaterials(S_Player_X p, bool ally)
+	{
+		if (ally)
+		{ 
+			p.ChangeMaterial(tdmSettings.allyMaterial);
+		}
+		else
+		{
+			p.ChangeMaterial(tdmSettings.enemyMaterial);
+		}
+	}
+	
 
 	[ServerRPC(RequireOwnership = false)]
 	public void SelectTeam(S_Player_X p, int teamId)
@@ -79,7 +183,7 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 		}
 	}
 
-	[ServerRPC]
+	[ServerRPC(RequireOwnership = false)]
 	public void BalanceTeams()
 	{
 		teamA.Clear();

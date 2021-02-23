@@ -9,6 +9,9 @@ public class SOBJ_TDMSettings_X : ScriptableObject
 	public int teamBMaxPlayers = 4;
 	public int spectatingMaxPlayers = 2;
 
+	public Material allyMaterial;
+	public Material enemyMaterial;
+
 	public float preMatchTimer = 60;
 	public float matchTime = 300;
 

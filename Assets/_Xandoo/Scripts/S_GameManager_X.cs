@@ -12,7 +12,7 @@ public class S_GameManager_X : NetworkedBehaviour
 
 	public static S_GameManager_X Singleton { get; }
 
-	public S_GameMode_X gameModePrefab;
+	public S_GameMode_X gameMode;
 
 
 	private void Awake()
@@ -37,16 +37,27 @@ public class S_GameManager_X : NetworkedBehaviour
 
 	private void ClientDisconnected(ulong obj)
 	{
-		throw new System.NotImplementedException();
+		/*
+		NetworkingManager.Singleton.ConnectedClients.TryGetValue(obj, out NetworkedClient client);
+		Debug.Log(client.PlayerObject.gameObject + " has disconnected.");
+
+		if (IsLocalPlayer)
+			InvokeServerRpc(gameMode.PlayerDisconnected, client);
+		else
+			gameMode.PlayerDisconnected(client);
+		*/
 	}
 
 	private void ClientConnected(ulong obj)
 	{
-		
+		if (IsHost)
+		{
+			gameMode.PlayerConnected(obj);
+		}
 	}
 
 	private void SeverStarted()
 	{
-		
+		gameMode.ServerStarted();
 	}
 }
