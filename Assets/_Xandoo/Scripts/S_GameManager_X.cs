@@ -10,21 +10,23 @@ public class S_GameManager_X : NetworkedBehaviour
 
 	private static S_GameManager_X _singleton;
 
-	public static S_GameManager_X Singleton { get; }
+	public static S_GameManager_X Singleton { get { return _singleton; } }
 
 	public S_GameMode_X gameMode;
 
+	public bool gameRunning = false;
+	public bool isPaused = false;
 
 	private void Awake()
 	{
 		if (_singleton != null && _singleton != this)
 		{
 			Destroy(gameObject);
+			return;
 		}
-		else
-		{
-			_singleton = this;
-		}
+
+		_singleton = this;
+
 		DontDestroyOnLoad(gameObject);
 	}
 
