@@ -17,6 +17,8 @@ public class S_GameManager_X : NetworkedBehaviour
 	public bool gameRunning = false;
 	public bool isPaused = false;
 
+	public bool gameModeRunning = false;
+
 	private void Awake()
 	{
 		if (_singleton != null && _singleton != this)
@@ -39,15 +41,12 @@ public class S_GameManager_X : NetworkedBehaviour
 
 	private void ClientDisconnected(ulong obj)
 	{
-		/*
-		NetworkingManager.Singleton.ConnectedClients.TryGetValue(obj, out NetworkedClient client);
-		Debug.Log(client.PlayerObject.gameObject + " has disconnected.");
-
-		if (IsLocalPlayer)
-			InvokeServerRpc(gameMode.PlayerDisconnected, client);
-		else
-			gameMode.PlayerDisconnected(client);
-		*/
+		Debug.Log("Player Disconnected");
+		if (IsHost)
+		{
+			gameMode.PlayerDisconnected(obj);
+		}
+		
 	}
 
 	private void ClientConnected(ulong obj)
@@ -61,5 +60,18 @@ public class S_GameManager_X : NetworkedBehaviour
 	private void SeverStarted()
 	{
 		gameMode.ServerStarted();
+	}
+
+	public S_Player_X GetPlayerFromClientId(ulong obj)
+	{
+		NetworkingManager.Singleton.ConnectedClients.TryGetValue(obj, out NetworkedClient client);
+		S_Player_X p = client.PlayerObject.GetComponent<S_Player_X>();
+		return p;
+	}
+
+	public void StartGameMode()
+	{
+		gameModeRunning = true;
+		gameMode.StartGameMode();
 	}
 }

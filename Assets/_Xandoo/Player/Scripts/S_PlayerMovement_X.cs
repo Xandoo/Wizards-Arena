@@ -61,22 +61,23 @@ public class S_PlayerMovement_X : NetworkedBehaviour
     {
         if (IsLocalPlayer)
         {
-			if (!S_GameManager_X.Singleton.isPaused)
+			if (isSpectating)
 			{
 				MovePlayer();
 				RotatePlayer();
-
-				if (!isSpectating)
+				specVerticalMovement();
+			}
+			else
+			{
+				if (!S_GameManager_X.Singleton.isPaused)
 				{
+					MovePlayer();
+					RotatePlayer();
 					JumpPlayer();
-					CheckIsGrounded();
-					ApplyGravity();
 					Attack();
 				}
-				else
-				{
-					specVerticalMovement();
-				}
+				CheckIsGrounded();
+				ApplyGravity();
 			}
         }
 

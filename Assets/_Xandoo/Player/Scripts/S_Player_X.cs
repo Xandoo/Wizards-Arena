@@ -124,7 +124,7 @@ public class S_Player_X : NetworkedBehaviour
 	{
 		foreach (SkinnedMeshRenderer meshRenderer in bodyParts)
 		{
-			Debug.Log("Set " + meshRenderer + " materials to " + material);
+			//Debug.Log("Set " + meshRenderer + " materials to " + material);
 			meshRenderer.material = material;
 		}
 	}
