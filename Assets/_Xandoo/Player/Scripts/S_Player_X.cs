@@ -18,7 +18,7 @@ public class S_Player_X : NetworkedBehaviour
 
     public NetworkedVarInt teamID = new NetworkedVarInt(new NetworkedVarSettings { WritePermission = NetworkedVarPermission.ServerOnly }, -1);
 
-	public NetworkedVarInt Health = new NetworkedVarInt(new NetworkedVarSettings { WritePermission = NetworkedVarPermission.OwnerOnly });
+	public int Health = 0;
 
 	public SkinnedMeshRenderer[] bodyParts;
 
@@ -40,7 +40,7 @@ public class S_Player_X : NetworkedBehaviour
             children[0].gameObject.SetActive(false);
         }
 
-        Health.Value = playerStats.GetMaxHealth();
+        Health = playerStats.GetMaxHealth();
 
 	}
 
@@ -74,34 +74,35 @@ public class S_Player_X : NetworkedBehaviour
         GameObject spell = Instantiate(spellSettings.GetTrailFX(), spellSpawnLocation.position, spellSpawnLocation.rotation);
         spell.GetComponent<NetworkedObject>().Spawn();
         spell.GetComponent<Rigidbody>().AddForce(spell.transform.forward * spellSettings.GetSpeed());
-		spell.GetComponent<ETFXProjectileScript>().Owner = this;
+		spell.GetComponent<ETFXProjectileScript>().Owner = OwnerClientId;
     }
 
     public void Heal(int amount)
     {
-        Health.Value += amount;
-        Mathf.Clamp(Health.Value, 0, playerStats.GetMaxHealth());
+        Health += amount;
+        Mathf.Clamp(Health, 0, playerStats.GetMaxHealth());
     }
 
-    public void Damage(int amount, S_Player_X damager = null)
+	[ServerRPC]
+    public void Damage(int amount, ulong damager = 0)
     {
-		if (damager)
+		if (damager > 0)
 		{
-			Health.Value -= amount;
-			Mathf.Clamp(Health.Value, 0, playerStats.GetMaxHealth());
+			Health -= amount;
+			Mathf.Clamp(Health, 0, playerStats.GetMaxHealth());
 
 			if (IsHost)
 			{
-				UpdateHealthBarOfDamagedPlayer(GetComponent<S_PlayerCanvas_X>(), Health.Value);
+				UpdateHealthBarOfDamagedPlayer(GetComponent<S_PlayerCanvas_X>(), Health);
 			}
 			
-			InvokeClientRpc(UpdateHealthBarOfDamagedPlayer, new List<ulong> { damager.GetComponent<NetworkedObject>().NetworkId }, GetComponent<S_PlayerCanvas_X>(), Health.Value);
+			InvokeClientRpcOnEveryone(UpdateHealthBarOfDamagedPlayer, GetComponent<S_PlayerCanvas_X>(), Health);
 			
 		}
 		else
 		{
-			Health.Value -= amount;
-			Mathf.Clamp(Health.Value, 0, playerStats.GetMaxHealth());
+			Health -= amount;
+			Mathf.Clamp(Health, 0, playerStats.GetMaxHealth());
 		}
 
 		//GetComponent<S_PlayerCanvas_X>().healthBar.value = Health.Value;
