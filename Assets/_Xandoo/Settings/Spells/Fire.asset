@@ -15,10 +15,8 @@ MonoBehaviour:
   element: 0
   castTime: 1
   cooldown: 0.5
-  speed: 800
+  speed: 0.2
   damage: 3
   damageOverTime: 2
   areaOfEffect: 4
-  preCastFX: {fileID: 0}
-  trailFX: {fileID: 128572, guid: bb886351f7eed15408c11563f5caf572, type: 3}
-  hitFX: {fileID: 0}
+  projectile: {fileID: 128572, guid: bb886351f7eed15408c11563f5caf572, type: 3}

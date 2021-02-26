@@ -71,10 +71,10 @@ public class S_Player_X : NetworkedBehaviour
 
     void SpawnProjectile()
     {
-        GameObject spell = Instantiate(spellSettings.GetTrailFX(), spellSpawnLocation.position, spellSpawnLocation.rotation);
+        GameObject spell = Instantiate(spellSettings.GetProjectile(), spellSpawnLocation.position, spellSpawnLocation.rotation);
         spell.GetComponent<NetworkedObject>().Spawn();
-        spell.GetComponent<Rigidbody>().AddForce(spell.transform.forward * spellSettings.GetSpeed());
-		spell.GetComponent<ETFXProjectileScript>().Owner = OwnerClientId;
+        //spell.GetComponent<Rigidbody>().AddForce(spell.transform.forward * spellSettings.GetSpeed());
+		spell.GetComponent<S_Projectile_X>().Owner = OwnerClientId;
     }
 
     public void Heal(int amount)
@@ -83,7 +83,7 @@ public class S_Player_X : NetworkedBehaviour
         Mathf.Clamp(Health, 0, playerStats.GetMaxHealth());
     }
 
-	[ServerRPC]
+	// This is the client that took damage
     public void Damage(int amount, ulong damager = 0)
     {
 		if (damager > 0)
@@ -104,8 +104,6 @@ public class S_Player_X : NetworkedBehaviour
 			Health -= amount;
 			Mathf.Clamp(Health, 0, playerStats.GetMaxHealth());
 		}
-
-		//GetComponent<S_PlayerCanvas_X>().healthBar.value = Health.Value;
     }
 
 	[ClientRPC]

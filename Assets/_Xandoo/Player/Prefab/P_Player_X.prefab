@@ -480,7 +480,7 @@ GameObject:
   - component: {fileID: 1076900959355759373}
   - component: {fileID: 230551792672326288}
   - component: {fileID: 8749213023875796195}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: P_Player_X
   m_TagString: Player
   m_Icon: {fileID: 0}
@@ -586,8 +586,7 @@ MonoBehaviour:
   spellSettings: {fileID: 11400000, guid: 14eda0df7f01db94c814ae9620ffe157, type: 2}
   teamID:
     InternalValue: -1
-  Health:
-    InternalValue: 0
+  Health: 0
   bodyParts:
   - {fileID: 5948966435455700224}
   - {fileID: 5948966435455700234}
