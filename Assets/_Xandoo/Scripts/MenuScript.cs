@@ -4,6 +4,7 @@ using UnityEngine;
 using MLAPI;
 using MLAPI.Transports.UNET;
 using UnityEngine.UI;
+using MLAPI.Messaging;
 
 public class MenuScript : NetworkedBehaviour
 {
@@ -39,12 +40,18 @@ public class MenuScript : NetworkedBehaviour
 		if (IsHost)
 		{
 			NetworkingManager.Singleton.StopHost();
+			S_GameManager_X.Singleton.ResetGame();
+
+			
 		}
 		else if (IsClient)
 		{
 			NetworkingManager.Singleton.StopClient();
+			
 		}
-		
+		timerText.text = "00:00";
+		teamAScoreText.text = "00";
+		teamBScoreText.text = "00";
 		menuPanel.SetActive(true);
 		pausePanel.SetActive(false);
 		S_GameManager_X.Singleton.gameRunning = false;
@@ -79,26 +86,39 @@ public class MenuScript : NetworkedBehaviour
 			gameHud.SetActive(true);
 		}
 
-		if (S_GameManager_X.Singleton.gameModeRunning)
+		if (IsHost)
 		{
-			string min = "";
-			string sec = "";
-			switch (gameMode.gameModeState)
+			if (S_GameManager_X.Singleton.gameModeRunning)
 			{
-				
-				case S_GameMode_X.GameModeState.PREMATCH:
-					min = Mathf.Floor(gameMode.preMatchTimer / 60).ToString("00");
-					sec = (gameMode.preMatchTimer % 60).ToString("00");
-					timerText.text = string.Format("{0}:{1}", min, sec);
-					break;
-				case S_GameMode_X.GameModeState.MATCH:
-					min = Mathf.Floor(gameMode.preMatchTimer / 60).ToString("00");
-					sec = (gameMode.preMatchTimer % 60).ToString("00");
-					timerText.text = string.Format("{0}:{1}", min, sec);
-					break;
-				case S_GameMode_X.GameModeState.END:
-					break;
+				string min = "";
+				string sec = "";
+				switch (gameMode.gameModeState)
+				{
+
+					case S_GameMode_X.GameModeState.PREMATCH:
+						min = Mathf.Floor(gameMode.preMatchTimer / 60).ToString("00");
+						sec = (gameMode.preMatchTimer % 60).ToString("00");
+						UpdateClientUITime(string.Format("{0}:{1}", min, sec));
+						InvokeClientRpcOnEveryone(UpdateClientUITime, string.Format("{0}:{1}", min, sec));
+
+						break;
+					case S_GameMode_X.GameModeState.MATCH:
+						min = Mathf.Floor(gameMode.matchTimer / 60).ToString("00");
+						sec = (gameMode.matchTimer % 60).ToString("00");
+						UpdateClientUITime(string.Format("{0}:{1}", min, sec));
+						InvokeClientRpcOnEveryone(UpdateClientUITime, string.Format("{0}:{1}", min, sec));
+						
+						break;
+					case S_GameMode_X.GameModeState.END:
+						break;
+				}
 			}
 		}
+	}
+
+	[ClientRPC]
+	void UpdateClientUITime(string time)
+	{
+		timerText.text = time;
 	}
 }

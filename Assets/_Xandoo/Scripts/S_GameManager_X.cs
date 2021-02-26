@@ -74,4 +74,12 @@ public class S_GameManager_X : NetworkedBehaviour
 		gameModeRunning = true;
 		gameMode.StartGameMode();
 	}
+
+	public void ResetGame()
+	{
+		gameMode.ResetGameMode();
+		gameRunning = false;
+		isPaused = false;
+		gameModeRunning = false;
+	}
 }

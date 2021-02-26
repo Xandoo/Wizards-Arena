@@ -31,7 +31,7 @@ public class S_Player_X : NetworkedBehaviour
         {
             Animator[] children = GetComponentsInChildren<Animator>();
             children[0].gameObject.SetActive(true);
-            children[1].gameObject.SetActive(false);
+			children[1].transform.position = new Vector3(transform.position.x, -1000, transform.position.z);
         }
         else
         {

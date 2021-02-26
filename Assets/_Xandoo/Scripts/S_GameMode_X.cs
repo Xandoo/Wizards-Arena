@@ -21,4 +21,6 @@ public abstract class S_GameMode_X : NetworkedBehaviour
 	public abstract void ServerStarted();
 
 	public abstract void StartGameMode();
+
+	public abstract void ResetGameMode();
 }

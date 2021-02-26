@@ -7,7 +7,7 @@ using MLAPI.Connection;
 
 public class S_TeamDeathMatch_X : S_GameMode_X
 {
-	public Transform[] doors;
+	public GameObject doors;
 	public S_SpawnPoint_X[] spawnPoints;
 	public SOBJ_TDMSettings_X tdmSettings;
 
@@ -58,47 +58,51 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 
 	private void Update()
 	{
-		if (isRunning)
+		if (IsHost)
 		{
-			switch (gameModeState)
+			if (isRunning)
 			{
-				case GameModeState.PREMATCH:
-					preMatchTimer -= Time.deltaTime;
-					if (preMatchTimer <= 0f)
-					{
-						gameModeState = GameModeState.MATCH;
-					}
-					break;
-				case GameModeState.MATCH:
-					matchTimer -= Time.deltaTime;
+				switch (gameModeState)
+				{
+					case GameModeState.PREMATCH:
+						preMatchTimer -= Time.deltaTime;
+						if (preMatchTimer <= 0f)
+						{
+							//OpenDoors();
+							InvokeClientRpcOnEveryone(SetDoorsActive, false);
+							gameModeState = GameModeState.MATCH;
+						}
+						break;
+					case GameModeState.MATCH:
+						matchTimer -= Time.deltaTime;
 
-					if (teamAEleminations >= tdmSettings.scoreToWin)
-					{
-						winningTeam = true;
-						gameModeState = GameModeState.END;
-					}
-					
-					if (teamBEleminations >= tdmSettings.scoreToWin)
-					{
-						winningTeam = false;
-						gameModeState = GameModeState.END;
-					}
+						if (teamAEleminations >= tdmSettings.scoreToWin)
+						{
+							winningTeam = true;
+							gameModeState = GameModeState.END;
+						}
 
-					if (matchTimer <= 0f)
-					{
-						gameModeState = GameModeState.END;
-					}
+						if (teamBEleminations >= tdmSettings.scoreToWin)
+						{
+							winningTeam = false;
+							gameModeState = GameModeState.END;
+						}
 
-					break;
-				case GameModeState.END:
-					break;
+						if (matchTimer <= 0f)
+						{
+							gameModeState = GameModeState.END;
+						}
+
+						break;
+					case GameModeState.END:
+						break;
+				}
+
+				timeElapsed += Time.deltaTime;
 			}
-			
-			timeElapsed += Time.deltaTime;
 		}
 	}
 
-	//[ServerRPC(RequireOwnership = false)]
 	public override void PlayerConnected(ulong clientObj)
 	{
 		NetworkingManager.Singleton.ConnectedClients.TryGetValue(clientObj, out NetworkedClient client);
@@ -168,7 +172,6 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 		
 	}
 
-	//[ServerRPC(RequireOwnership = false)]
 	public override void PlayerDisconnected(ulong clientId)
 	{
 
@@ -181,6 +184,10 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 			teamB.Remove(clientId);
 		}
 		
+		if (IsClient)
+		{
+			ResetGameMode();
+		}
 	}
 
 	public override void ServerStarted()
@@ -194,6 +201,14 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 	{
 		isRunning = true;
 		gameModeState = GameModeState.PREMATCH;
+	}
+
+	public override void ResetGameMode()
+	{
+		Start();
+		SetDoorsActive(true);
+		teamSelect = false;
+		isRunning = false;
 	}
 
 	void AssignTeam(ulong obj)
@@ -290,6 +305,12 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 		{
 			p.ChangeMaterial(tdmSettings.enemyMaterial);
 		}
+	}
+
+	[ClientRPC]
+	void SetDoorsActive(bool active)
+	{
+		doors.SetActive(active);
 	}
 	
 	[ServerRPC(RequireOwnership = false)]
