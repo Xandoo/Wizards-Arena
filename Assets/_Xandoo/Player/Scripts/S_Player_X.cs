@@ -55,61 +55,47 @@ public class S_Player_X : NetworkedBehaviour
         yield return new WaitForSeconds(spellSettings.GetCastTime());
         if (IsHost)
         {
-            SpawnProjectile();
+            SpawnProjectile(OwnerClientId);
         }
         else
         {
-            InvokeServerRpc(RequestSpawnProjectileOnServer);
+            InvokeServerRpc(RequestSpawnProjectileOnServer, OwnerClientId);
         }
     }
 
     [ServerRPC]
-    void RequestSpawnProjectileOnServer()
+    void RequestSpawnProjectileOnServer(ulong requestingPlayer)
     {
-        SpawnProjectile();
+        SpawnProjectile(requestingPlayer);
     }
 
-    void SpawnProjectile()
+    void SpawnProjectile(ulong spawningPlayer)
     {
         GameObject spell = Instantiate(spellSettings.GetProjectile(), spellSpawnLocation.position, spellSpawnLocation.rotation);
         spell.GetComponent<NetworkedObject>().Spawn();
         //spell.GetComponent<Rigidbody>().AddForce(spell.transform.forward * spellSettings.GetSpeed());
-		spell.GetComponent<S_Projectile_X>().Owner = OwnerClientId;
+		spell.GetComponent<S_Projectile_X>().Init(spawningPlayer);
+		//Debug.Log(OwnerClientId);
+		//spell.GetComponent<S_Projectile_X>().owningPlayer = this;
     }
 
     public void Heal(int amount)
     {
         Health += amount;
-        Mathf.Clamp(Health, 0, playerStats.GetMaxHealth());
-    }
+        Health = Mathf.Clamp(Health, 0, playerStats.GetMaxHealth());
+		GetComponent<S_PlayerCanvas_X>().healthBar.value = Health;
+	}
 
 	// This is the client that took damage
-    public void Damage(int amount, ulong damager = 0)
+    public void Damage(int amount, ulong damager)
     {
-		if (damager > 0)
+		Health -= amount;
+		Health = Mathf.Clamp(Health, 0, playerStats.GetMaxHealth());
+		GetComponent<S_PlayerCanvas_X>().healthBar.value = Health;
+		if (Health <= 0)
 		{
-			Health -= amount;
-			Mathf.Clamp(Health, 0, playerStats.GetMaxHealth());
-
-			if (IsHost)
-			{
-				UpdateHealthBarOfDamagedPlayer(GetComponent<S_PlayerCanvas_X>(), Health);
-			}
-			
-			InvokeClientRpcOnEveryone(UpdateHealthBarOfDamagedPlayer, GetComponent<S_PlayerCanvas_X>(), Health);
-			
+			GetComponent<S_PlayerMovement_X>().SetIsSpectating(true);
 		}
-		else
-		{
-			Health -= amount;
-			Mathf.Clamp(Health, 0, playerStats.GetMaxHealth());
-		}
-    }
-
-	[ClientRPC]
-	private void UpdateHealthBarOfDamagedPlayer(S_PlayerCanvas_X can, int healthValue)
-	{
-		can.healthBar.value = healthValue;
 	}
 
 	[ClientRPC]

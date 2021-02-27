@@ -4,6 +4,7 @@ using UnityEngine;
 using MLAPI;
 using System;
 using MLAPI.Messaging;
+using MLAPI.Connection;
 
 public class S_Projectile_X : NetworkedBehaviour
 {
@@ -13,9 +14,9 @@ public class S_Projectile_X : NetworkedBehaviour
 	public LayerMask layerMask;
 
 
-	public ulong Owner = 0;
+	public ulong Owner;
 
-	private S_Player_X owningPlayer;
+	public S_Player_X owningPlayer;
 	//private float timeElapsed = 0f;
 	private bool hit = false;
 
@@ -23,8 +24,13 @@ public class S_Projectile_X : NetworkedBehaviour
     void Start()
     {
 		muzzleFire.SetActive(true);
-		owningPlayer = S_GameManager_X.Singleton.GetPlayerFromClientId(Owner);
     }
+
+	public void Init(ulong ownerClientId)
+	{
+		Owner = ownerClientId;
+		owningPlayer = S_GameManager_X.Singleton.GetPlayerFromClientId(Owner);
+	}
 
 	// Update is called once per frame
 	void FixedUpdate()
@@ -64,29 +70,33 @@ public class S_Projectile_X : NetworkedBehaviour
 		if (Physics.SphereCast(transform.position, 0.15f, transform.forward, out RaycastHit hitInfo, 0.15f, layerMask)  && !hit)
 		{
 			Debug.Log("Sphere Hit: " + hitInfo.transform.gameObject);
-			hit = true;
-
-			DisplayExplosion();
 
 			if (IsHost)
 			{
 				if (hitInfo.transform.gameObject.tag.Equals("Player"))
 				{
+					
 					ulong playerClientId = hitInfo.transform.gameObject.GetComponent<NetworkedObject>().OwnerClientId;
-					InvokeClientRpcOnEveryone(DamagePlayer, playerClientId, Owner);
+					//Debug.Log("Hit player with client id: " + playerClientId);
+
+					Debug.Log("Client: " + Owner + " damaged Client: " + playerClientId);
+
+					S_Player_X damagedPlayer = S_GameManager_X.Singleton.GetPlayerFromClientId(playerClientId);
+					S_Player_X attackingPlayer = S_GameManager_X.Singleton.GetPlayerFromClientId(Owner);
+
+					InvokeClientRpcOnEveryone(DamagePlayer, damagedPlayer, attackingPlayer);
 				}
 			}
+			hit = true;
+
+			DisplayExplosion();
 		}
     }
 
 	[ClientRPC]
-	private void DamagePlayer(ulong damagedPlayerClientId, ulong attackingPlayerClientId)
+	private void DamagePlayer(S_Player_X damagedPlayer, S_Player_X attackingPlayer)
 	{
-		S_Player_X damagedPlayer = S_GameManager_X.Singleton.GetPlayerFromClientId(damagedPlayerClientId);
-		S_Player_X attackingPlayer = S_GameManager_X.Singleton.GetPlayerFromClientId(attackingPlayerClientId);
-
-		damagedPlayer.Damage(attackingPlayer.spellSettings.GetDamage(), attackingPlayerClientId);
-
+		damagedPlayer.Damage(attackingPlayer.spellSettings.GetDamage(), attackingPlayer.OwnerClientId);
 	}
 
 	private void Move()

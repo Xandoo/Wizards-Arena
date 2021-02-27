@@ -201,4 +201,9 @@ public class S_PlayerMovement_X : NetworkedBehaviour
 		CharacterController cc = GetComponent<CharacterController>();
 		cc.height = colliderHeight;
 	}
+
+	public void SetIsSpectating(bool isSpectating)
+	{
+
+	}
 }

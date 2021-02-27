@@ -110,6 +110,11 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 
 		AssignTeam(clientObj);
 		UpdateConnectedPlayers();
+
+		if (gameModeState == GameModeState.MATCH)
+		{
+			InvokeClientRpcOnClient(SetDoorsActive, clientObj, false);
+		}
 	}
 
 	private void UpdateConnectedPlayers()

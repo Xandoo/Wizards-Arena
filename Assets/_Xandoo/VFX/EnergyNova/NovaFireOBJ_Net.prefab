@@ -132,8 +132,9 @@ MonoBehaviour:
   missileFire: {fileID: 3693372816239164066}
   layerMask:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 768
   Owner: 0
+  owningPlayer: {fileID: 0}
 --- !u!1001 &36413335347810514
 PrefabInstance:
   m_ObjectHideFlags: 0
