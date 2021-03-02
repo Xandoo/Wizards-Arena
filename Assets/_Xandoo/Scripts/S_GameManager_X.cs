@@ -51,6 +51,9 @@ public class S_GameManager_X : NetworkedBehaviour
 
 	private void ClientConnected(ulong obj)
 	{
+
+		GetPlayerFromClientId(obj).gameObject.name = "Player Client " + obj;
+
 		if (IsHost)
 		{
 			gameMode.PlayerConnected(obj);

@@ -69,7 +69,6 @@ public class S_Projectile_X : NetworkedBehaviour
 
 		if (Physics.SphereCast(transform.position, 0.15f, transform.forward, out RaycastHit hitInfo, 0.15f, layerMask)  && !hit)
 		{
-			Debug.Log("Sphere Hit: " + hitInfo.transform.gameObject);
 
 			if (IsHost)
 			{
@@ -77,10 +76,7 @@ public class S_Projectile_X : NetworkedBehaviour
 				{
 					
 					ulong playerClientId = hitInfo.transform.gameObject.GetComponent<NetworkedObject>().OwnerClientId;
-					//Debug.Log("Hit player with client id: " + playerClientId);
-
-					Debug.Log("Client: " + Owner + " damaged Client: " + playerClientId);
-
+					
 					S_Player_X damagedPlayer = S_GameManager_X.Singleton.GetPlayerFromClientId(playerClientId);
 					S_Player_X attackingPlayer = S_GameManager_X.Singleton.GetPlayerFromClientId(Owner);
 

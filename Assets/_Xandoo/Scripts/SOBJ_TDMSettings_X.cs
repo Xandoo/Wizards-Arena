@@ -12,8 +12,9 @@ public class SOBJ_TDMSettings_X : ScriptableObject
 	public Material allyMaterial;
 	public Material enemyMaterial;
 
-	public float preMatchTimer = 60;
-	public float matchTime = 300;
+	public float preMatchTimer = 60f;
+	public float matchTime = 300f;
+	public float respawnTime = 3f;
 
 	public int scoreToWin = 40;
 }

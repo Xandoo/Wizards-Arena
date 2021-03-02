@@ -4,6 +4,8 @@ using UnityEngine;
 using MLAPI;
 using MLAPI.Messaging;
 using MLAPI.Connection;
+using MLAPI.Prototyping;
+using System;
 
 public class S_TeamDeathMatch_X : S_GameMode_X
 {
@@ -30,6 +32,8 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 	public bool winningTeam;
 
 	public GameModeState gameModeState;
+
+	public event Action<int, int> OnScoreChanged;
 
 	private void Start()
 	{
@@ -188,11 +192,6 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 		{
 			teamB.Remove(clientId);
 		}
-		
-		if (IsClient)
-		{
-			ResetGameMode();
-		}
 	}
 
 	public override void ServerStarted()
@@ -221,11 +220,13 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 		S_Player_X p = S_GameManager_X.Singleton.GetPlayerFromClientId(obj);
 		if (teamSelect)
 		{
+			int randomNumber = UnityEngine.Random.Range(0, teamASpawn.Count - 1);
 			teamA.Add(obj);
 			p.teamID.Value = 0;
 			if (!p.GetComponent<NetworkedObject>().IsLocalPlayer)
 			{
-				InvokeClientRpcOnClient(SetPlayerPosition, obj, p, teamASpawn[Random.Range(0, teamASpawn.Count - 1)].transform.position);
+				
+				InvokeClientRpcOnClient(SetPlayerPosition, obj, p, teamASpawn[randomNumber].transform.position, teamASpawn[randomNumber].transform.rotation);
 				/*
 				foreach (S_Player_X player in teamA)
 				{
@@ -239,7 +240,8 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 			}
 			else
 			{
-				p.transform.position = teamASpawn[Random.Range(0, teamASpawn.Count - 1)].transform.position;
+				SetPlayerPosition(p, teamASpawn[randomNumber].transform.position, teamASpawn[randomNumber].transform.rotation);
+				//p.transform.position = teamASpawn[Random.Range(0, teamASpawn.Count - 1)].transform.position;
 				/*
 				foreach (S_Player_X player in teamA)
 				{
@@ -258,10 +260,10 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 		{
 			teamB.Add(obj);
 			p.teamID.Value = 1;
-
+			int randomNumber = UnityEngine.Random.Range(0, teamBSpawn.Count - 1);
 			if (!p.GetComponent<NetworkedObject>().IsLocalPlayer)
 			{
-				InvokeClientRpcOnClient(SetPlayerPosition, obj, p, teamBSpawn[Random.Range(0, teamBSpawn.Count - 1)].transform.position);
+				InvokeClientRpcOnClient(SetPlayerPosition, obj, p, teamBSpawn[randomNumber].transform.position, teamBSpawn[randomNumber].transform.rotation);
 
 				/*
 				foreach (S_Player_X player in teamB)
@@ -276,7 +278,8 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 			}
 			else
 			{
-				p.transform.position = teamBSpawn[Random.Range(0, teamBSpawn.Count - 1)].transform.position;
+				SetPlayerPosition(p, teamBSpawn[randomNumber].transform.position, teamBSpawn[randomNumber].transform.rotation);
+				//p.transform.position = teamBSpawn[Random.Range(0, teamBSpawn.Count - 1)].transform.position;
 				/*
 				foreach (S_Player_X player in teamB)
 				{
@@ -294,9 +297,9 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 	}
 
 	[ClientRPC]
-	void SetPlayerPosition(S_Player_X p, Vector3 pos)
+	void SetPlayerPosition(S_Player_X p, Vector3 pos, Quaternion rot)
 	{
-		p.SetPosition(pos);
+		p.Teleport(pos, rot);
 	}
 	
 	[ClientRPC]
@@ -355,7 +358,7 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 
 		for (int i = 0; i < players.Count; i++)
 		{
-			int randomInt = Random.Range(0, players.Count - 1);
+			int randomInt = UnityEngine.Random.Range(0, players.Count - 1);
 			if (teamSelect)
 			{
 				teamA.Add(clients[randomInt].ClientId);
@@ -371,5 +374,47 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 				teamSelect = !teamSelect;
 			}
 		}
+	}
+
+	public override void RespawnPlayer(S_Player_X player)
+	{
+		if (IsOwner)
+		{
+			InvokeServerRpc(IncreaseScore, player);
+		}
+		StartCoroutine(RespawnPlayerCoroutine(player));
+	}
+
+	[ServerRPC]
+	void IncreaseScore(S_Player_X player)
+	{
+		if (player.teamID.Value == 0)
+		{
+			teamBEleminations += 1;
+		}
+		else if (player.teamID.Value == 1)
+		{
+			teamAEleminations += 1;
+		}
+		OnScoreChanged(teamAEleminations, teamBEleminations);
+	}
+
+	IEnumerator RespawnPlayerCoroutine(S_Player_X player)
+	{
+		yield return new WaitForSeconds(tdmSettings.respawnTime);
+		
+		if (player.teamID.Value == 0)
+		{
+			int randomNumber = UnityEngine.Random.Range(0, teamASpawn.Count - 1);
+
+			SetPlayerPosition(player, teamASpawn[randomNumber].transform.position, teamASpawn[randomNumber].transform.rotation);
+		}
+		else if (player.teamID.Value == 1)
+		{
+			int randomNumber = UnityEngine.Random.Range(0, teamBSpawn.Count - 1);
+
+			SetPlayerPosition(player, teamBSpawn[randomNumber].transform.position, teamBSpawn[randomNumber].transform.rotation);
+		}
+		player.GetComponent<S_PlayerMovement_X>().SetIsSpectating(false);
 	}
 }

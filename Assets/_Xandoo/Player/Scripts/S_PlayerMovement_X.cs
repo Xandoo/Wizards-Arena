@@ -17,6 +17,8 @@ public class S_PlayerMovement_X : NetworkedBehaviour
     public float sensitivity = 3f;
     public float groundCheckDistance = 5f;
     public LayerMask groundLayer;
+	public bool isTeleporting = false;
+	public bool IsSpectating { get { return isSpectating; } }
 	
 	[SerializeField]
 	private bool isSpectating = false;
@@ -61,23 +63,26 @@ public class S_PlayerMovement_X : NetworkedBehaviour
     {
         if (IsLocalPlayer)
         {
-			if (isSpectating)
+			if (!isTeleporting)
 			{
-				MovePlayer();
-				RotatePlayer();
-				specVerticalMovement();
-			}
-			else
-			{
-				if (!S_GameManager_X.Singleton.isPaused)
+				if (isSpectating)
 				{
 					MovePlayer();
 					RotatePlayer();
-					JumpPlayer();
-					Attack();
+					specVerticalMovement();
 				}
-				CheckIsGrounded();
-				ApplyGravity();
+				else
+				{
+					if (!S_GameManager_X.Singleton.isPaused)
+					{
+						MovePlayer();
+						RotatePlayer();
+						JumpPlayer();
+						Attack();
+					}
+					CheckIsGrounded();
+					ApplyGravity();
+				}
 			}
         }
 
@@ -185,25 +190,37 @@ public class S_PlayerMovement_X : NetworkedBehaviour
         Gizmos.DrawWireSphere(groundCheckOrigin.position, groundCheckDistance);
     }
 
-	public void SetSpectating()
-	{
-		isSpectating = true;
-
-		CharacterController cc = GetComponent<CharacterController>();
-		colliderHeight = cc.height;
-		cc.height = 0;
-	}
-
-	public void SetNotSpectating()
-	{
-		isSpectating = false;
-
-		CharacterController cc = GetComponent<CharacterController>();
-		cc.height = colliderHeight;
-	}
-
 	public void SetIsSpectating(bool isSpectating)
 	{
+		CharacterController cc = GetComponent<CharacterController>();
 
+		if (isSpectating)
+		{
+			anim[0].gameObject.SetActive(false);
+			anim[1].gameObject.SetActive(false);
+			gameObject.layer = 10;
+			GetComponent<S_PlayerCanvas_X>().healthBar.gameObject.SetActive(false);
+			this.isSpectating = true;
+
+			colliderHeight = cc.height;
+			cc.height = 0;
+		}
+		else
+		{
+			if (IsLocalPlayer)
+			{
+				anim[0].gameObject.SetActive(true);
+				anim[1].gameObject.SetActive(true);
+			}
+			else
+			{
+				anim[1].gameObject.SetActive(true);
+			}
+			gameObject.layer = 9;
+			GetComponent<S_PlayerCanvas_X>().healthBar.gameObject.SetActive(true);
+			this.isSpectating = false;
+
+			cc.height = colliderHeight;
+		}
 	}
 }

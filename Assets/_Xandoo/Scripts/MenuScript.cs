@@ -40,15 +40,13 @@ public class MenuScript : NetworkedBehaviour
 		if (IsHost)
 		{
 			NetworkingManager.Singleton.StopHost();
-			S_GameManager_X.Singleton.ResetGame();
-
-			
 		}
 		else if (IsClient)
 		{
 			NetworkingManager.Singleton.StopClient();
-			
 		}
+
+		S_GameManager_X.Singleton.ResetGame();
 		timerText.text = "00:00";
 		teamAScoreText.text = "00";
 		teamBScoreText.text = "00";
@@ -56,6 +54,7 @@ public class MenuScript : NetworkedBehaviour
 		pausePanel.SetActive(false);
 		S_GameManager_X.Singleton.gameRunning = false;
 		S_GameManager_X.Singleton.isPaused = false;
+
 	}
 
 	public void SetIP(string ip)
@@ -67,6 +66,7 @@ public class MenuScript : NetworkedBehaviour
 	{
 		S_GameManager_X.Singleton.StartGameMode();
 		gameMode = (S_TeamDeathMatch_X)S_GameManager_X.Singleton.gameMode;
+		gameMode.OnScoreChanged += UpdateScore;
 	}
 
 	private void Update()
@@ -116,9 +116,21 @@ public class MenuScript : NetworkedBehaviour
 		}
 	}
 
+	public void UpdateScore(int a, int b)
+	{
+		InvokeClientRpcOnEveryone(UpdateClientsScore, a, b);
+	}
+
 	[ClientRPC]
 	void UpdateClientUITime(string time)
 	{
 		timerText.text = time;
+	}
+
+	[ClientRPC]
+	void UpdateClientsScore(int a, int b)
+	{
+		teamAScoreText.text = a.ToString("00");
+		teamBScoreText.text = b.ToString("00");
 	}
 }

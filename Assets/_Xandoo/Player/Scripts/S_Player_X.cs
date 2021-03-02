@@ -8,6 +8,7 @@ using MLAPI.Serialization;
 using System.Security.Policy;
 using System.IO;
 using MLAPI.Serialization.Pooled;
+using MLAPI.Prototyping;
 
 public class S_Player_X : NetworkedBehaviour
 {
@@ -36,8 +37,8 @@ public class S_Player_X : NetworkedBehaviour
         else
         {
             Animator[] children = GetComponentsInChildren<Animator>();
-            children[1].gameObject.SetActive(true);
             children[0].gameObject.SetActive(false);
+			children[1].gameObject.SetActive(true);
         }
 
         Health = playerStats.GetMaxHealth();
@@ -89,19 +90,35 @@ public class S_Player_X : NetworkedBehaviour
 	// This is the client that took damage
     public void Damage(int amount, ulong damager)
     {
-		Health -= amount;
-		Health = Mathf.Clamp(Health, 0, playerStats.GetMaxHealth());
-		GetComponent<S_PlayerCanvas_X>().healthBar.value = Health;
-		if (Health <= 0)
+		if (!GetComponent<S_PlayerMovement_X>().IsSpectating)
 		{
-			GetComponent<S_PlayerMovement_X>().SetIsSpectating(true);
+			Health -= amount;
+			Health = Mathf.Clamp(Health, 0, playerStats.GetMaxHealth());
+
+			if (Health <= 0)
+			{
+
+				GetComponent<S_PlayerMovement_X>().SetIsSpectating(true);
+				Health = playerStats.GetMaxHealth();
+
+				S_GameManager_X.Singleton.gameMode.RespawnPlayer(this);
+			}
+
+			GetComponent<S_PlayerCanvas_X>().healthBar.value = Health;
 		}
 	}
 
+	[ServerRPC]
+	void AskServerToRespawn(S_Player_X p)
+	{
+		S_GameManager_X.Singleton.gameMode.RespawnPlayer(p);
+	}
+
 	[ClientRPC]
-	public void SetPosition(Vector3 pos)
+	public void Teleport(Vector3 pos, Quaternion rot)
 	{
 		transform.position = pos;
+		transform.rotation = rot;
 	}
 
 	[ClientRPC]
@@ -109,7 +126,6 @@ public class S_Player_X : NetworkedBehaviour
 	{
 		foreach (SkinnedMeshRenderer meshRenderer in bodyParts)
 		{
-			//Debug.Log("Set " + meshRenderer + " materials to " + material);
 			meshRenderer.material = material;
 		}
 	}
