@@ -17,6 +17,11 @@ public class S_PlayerMovement_X : NetworkedBehaviour
     public float sensitivity = 3f;
     public float groundCheckDistance = 5f;
     public LayerMask groundLayer;
+	public bool isTeleporting = false;
+	public bool IsSpectating { get { return isSpectating; } }
+	
+	[SerializeField]
+	private bool isSpectating = false;
     
 
     [SerializeField]
@@ -34,6 +39,8 @@ public class S_PlayerMovement_X : NetworkedBehaviour
     [SerializeField]
     private bool isGrounded;
 
+	private float colliderHeight;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -46,7 +53,7 @@ public class S_PlayerMovement_X : NetworkedBehaviour
         {
             cc = GetComponent<CharacterController>();
             player = GetComponent<S_Player_X>();
-            
+			Cursor.lockState = CursorLockMode.Locked;
         }
         //anim = GetComponentsInChildren<Animator>();
     }
@@ -56,17 +63,50 @@ public class S_PlayerMovement_X : NetworkedBehaviour
     {
         if (IsLocalPlayer)
         {
-            MovePlayer();
-            RotatePlayer();
-            JumpPlayer();
-            CheckIsGrounded();
-            ApplyGravity();
-            Attack();
+			if (!isTeleporting)
+			{
+				if (isSpectating)
+				{
+					MovePlayer();
+					RotatePlayer();
+					specVerticalMovement();
+				}
+				else
+				{
+					if (!S_GameManager_X.Singleton.isPaused)
+					{
+						MovePlayer();
+						RotatePlayer();
+						JumpPlayer();
+						Attack();
+					}
+					CheckIsGrounded();
+					ApplyGravity();
+				}
+			}
         }
 
     }
 
-    void Attack()
+	private void specVerticalMovement()
+	{
+		Vector3 vMove = new Vector3();
+		if (Input.GetButton("Jump"))
+		{
+			Debug.Log("Moving up");
+			vMove = Vector3.up * Time.deltaTime;
+		}
+		if (Input.GetButton("Crouch"))
+		{
+			Debug.Log("Moving down");
+			vMove = Vector3.down * Time.deltaTime;
+		}
+		//vMove = Vector3.ClampMagnitude(move, 1f);
+
+		cc.Move(vMove * speed);
+	}
+
+	void Attack()
     {
         if (Input.GetButton("Fire1"))
         {
@@ -149,4 +189,38 @@ public class S_PlayerMovement_X : NetworkedBehaviour
         Gizmos.color = Color.green;
         Gizmos.DrawWireSphere(groundCheckOrigin.position, groundCheckDistance);
     }
+
+	public void SetIsSpectating(bool isSpectating)
+	{
+		CharacterController cc = GetComponent<CharacterController>();
+
+		if (isSpectating)
+		{
+			anim[0].gameObject.SetActive(false);
+			anim[1].gameObject.SetActive(false);
+			gameObject.layer = 10;
+			GetComponent<S_PlayerCanvas_X>().healthBar.gameObject.SetActive(false);
+			this.isSpectating = true;
+
+			colliderHeight = cc.height;
+			cc.height = 0;
+		}
+		else
+		{
+			if (IsLocalPlayer)
+			{
+				anim[0].gameObject.SetActive(true);
+				anim[1].gameObject.SetActive(true);
+			}
+			else
+			{
+				anim[1].gameObject.SetActive(true);
+			}
+			gameObject.layer = 9;
+			GetComponent<S_PlayerCanvas_X>().healthBar.gameObject.SetActive(true);
+			this.isSpectating = false;
+
+			cc.height = colliderHeight;
+		}
+	}
 }

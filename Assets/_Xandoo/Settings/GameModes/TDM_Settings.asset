@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: deff02e7725ac0c4f80cab1afd515d60, type: 3}
+  m_Name: TDM_Settings
+  m_EditorClassIdentifier: 
+  teamAMaxPlayers: 4
+  teamBMaxPlayers: 4
+  spectatingMaxPlayers: 2
+  allyMaterial: {fileID: 2100000, guid: 2023f7af4b3622e4f8cba098c2589e65, type: 2}
+  enemyMaterial: {fileID: 2100000, guid: 6ac271d705f1c6945aa23a1eea0c4507, type: 2}
+  preMatchTimer: 5
+  matchTime: 300
+  scoreToWin: 40

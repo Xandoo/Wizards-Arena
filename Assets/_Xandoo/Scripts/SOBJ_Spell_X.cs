@@ -29,11 +29,7 @@ public class SOBJ_Spell_X : ScriptableObject
     [SerializeField]
     float areaOfEffect = 4f;
     [SerializeField]
-    GameObject preCastFX;
-    [SerializeField]
-    GameObject trailFX;
-    [SerializeField]
-    GameObject hitFX;
+    GameObject projectile;
 
     public Element GetElement()
     {
@@ -69,20 +65,10 @@ public class SOBJ_Spell_X : ScriptableObject
     {
         return cooldown;
     }
-
-    public GameObject GetPreCastFX()
-    {
-        return preCastFX;
-    }
     
-    public GameObject GetTrailFX()
+    public GameObject GetProjectile()
     {
-        return trailFX;
-    }
-    
-    public GameObject GetHitFX()
-    {
-        return hitFX;
+        return projectile;
     }
 
 }
