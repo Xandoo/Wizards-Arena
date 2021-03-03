@@ -15,6 +15,7 @@ public class S_Projectile_X : NetworkedBehaviour
 
 
 	public ulong Owner;
+	public float radius = 0.3f;
 
 	public S_Player_X owningPlayer;
 	//private float timeElapsed = 0f;
@@ -67,7 +68,7 @@ public class S_Projectile_X : NetworkedBehaviour
 			}
 		}
 
-		if (Physics.SphereCast(transform.position, 0.15f, transform.forward, out RaycastHit hitInfo, 0.15f, layerMask)  && !hit)
+		if (Physics.SphereCast(transform.position, radius, transform.forward, out RaycastHit hitInfo, radius, layerMask)  && !hit)
 		{
 
 			if (IsHost)
@@ -80,6 +81,10 @@ public class S_Projectile_X : NetworkedBehaviour
 					S_Player_X damagedPlayer = S_GameManager_X.Singleton.GetPlayerFromClientId(playerClientId);
 					S_Player_X attackingPlayer = S_GameManager_X.Singleton.GetPlayerFromClientId(Owner);
 
+					if (damagedPlayer.GetComponent<NetworkedObject>().IsOwnedByServer)
+					{
+						Debug.Log("Damaged player is owned by the server");
+					}	
 					InvokeClientRpcOnEveryone(DamagePlayer, damagedPlayer, attackingPlayer);
 				}
 			}

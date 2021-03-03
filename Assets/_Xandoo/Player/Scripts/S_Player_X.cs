@@ -9,6 +9,7 @@ using System.Security.Policy;
 using System.IO;
 using MLAPI.Serialization.Pooled;
 using MLAPI.Prototyping;
+using System;
 
 public class S_Player_X : NetworkedBehaviour
 {
@@ -53,7 +54,8 @@ public class S_Player_X : NetworkedBehaviour
 
     public IEnumerator CastSpell()
     {
-        yield return new WaitForSeconds(spellSettings.GetCastTime());
+		GetComponent<S_PlayerMovement_X>().isAttacking = true;
+		yield return new WaitForSeconds(spellSettings.GetCastTime());
         if (IsHost)
         {
             SpawnProjectile(OwnerClientId);
@@ -62,9 +64,10 @@ public class S_Player_X : NetworkedBehaviour
         {
             InvokeServerRpc(RequestSpawnProjectileOnServer, OwnerClientId);
         }
-    }
+		GetComponent<S_PlayerMovement_X>().isAttacking = false;
+	}
 
-    [ServerRPC]
+	[ServerRPC]
     void RequestSpawnProjectileOnServer(ulong requestingPlayer)
     {
         SpawnProjectile(requestingPlayer);
@@ -74,17 +77,14 @@ public class S_Player_X : NetworkedBehaviour
     {
         GameObject spell = Instantiate(spellSettings.GetProjectile(), spellSpawnLocation.position, spellSpawnLocation.rotation);
         spell.GetComponent<NetworkedObject>().Spawn();
-        //spell.GetComponent<Rigidbody>().AddForce(spell.transform.forward * spellSettings.GetSpeed());
 		spell.GetComponent<S_Projectile_X>().Init(spawningPlayer);
-		//Debug.Log(OwnerClientId);
-		//spell.GetComponent<S_Projectile_X>().owningPlayer = this;
     }
 
     public void Heal(int amount)
     {
         Health += amount;
         Health = Mathf.Clamp(Health, 0, playerStats.GetMaxHealth());
-		GetComponent<S_PlayerCanvas_X>().healthBar.value = Health;
+		GetComponent<S_PlayerCanvas_X>().thirdPersonHealthBar.value = Health;
 	}
 
 	// This is the client that took damage
@@ -104,14 +104,10 @@ public class S_Player_X : NetworkedBehaviour
 				S_GameManager_X.Singleton.gameMode.RespawnPlayer(this);
 			}
 
-			GetComponent<S_PlayerCanvas_X>().healthBar.value = Health;
+			GetComponent<S_PlayerCanvas_X>().thirdPersonHealthBar.value = Health;
+			GetComponent<S_PlayerCanvas_X>().firstPersonHealthBar.value = Health;
+			
 		}
-	}
-
-	[ServerRPC]
-	void AskServerToRespawn(S_Player_X p)
-	{
-		S_GameManager_X.Singleton.gameMode.RespawnPlayer(p);
 	}
 
 	[ClientRPC]

@@ -18,6 +18,7 @@ public class S_PlayerMovement_X : NetworkedBehaviour
     public float groundCheckDistance = 5f;
     public LayerMask groundLayer;
 	public bool isTeleporting = false;
+	public bool isAttacking = false;
 	public bool IsSpectating { get { return isSpectating; } }
 	
 	[SerializeField]
@@ -34,7 +35,7 @@ public class S_PlayerMovement_X : NetworkedBehaviour
     private Animator[] anim;
 
     private float pitch;
-    private float cooldownTimeStamp;
+    public float cooldownTime;
 
     [SerializeField]
     private bool isGrounded;
@@ -54,7 +55,9 @@ public class S_PlayerMovement_X : NetworkedBehaviour
             cc = GetComponent<CharacterController>();
             player = GetComponent<S_Player_X>();
 			Cursor.lockState = CursorLockMode.Locked;
-        }
+			cooldownTime = player.spellSettings.GetCastTime();
+		}
+		
         //anim = GetComponentsInChildren<Animator>();
     }
 
@@ -108,18 +111,24 @@ public class S_PlayerMovement_X : NetworkedBehaviour
 
 	void Attack()
     {
-        if (Input.GetButton("Fire1"))
+        if (Input.GetButton("Fire1") && !isAttacking)
         {
-            if (cooldownTimeStamp <= Time.time)
+            if (cooldownTime >= player.spellSettings.GetCastTime())
             {
-                //This is where animaiton time remapping should go for changing cast time.
-                //I am not at that point yet. I just wanna make something fun.
                 anim[0].SetTrigger("Attack");
                 anim[1].SetTrigger("Attack");
-                StartCoroutine(player.CastSpell());
-                cooldownTimeStamp = Time.time + player.spellSettings.GetCooldown();
+                cooldownTime = 0f;
+				StartCoroutine(player.CastSpell());
             }
         }
+
+
+		if (!isAttacking)
+		{
+			cooldownTime += Time.deltaTime;
+		}
+
+		cooldownTime = Mathf.Clamp(cooldownTime, 0, player.spellSettings.GetCastTime());
     }
 
     private void JumpPlayer()
@@ -127,7 +136,6 @@ public class S_PlayerMovement_X : NetworkedBehaviour
         if (Input.GetButtonDown("Jump") && isGrounded)
         {
             velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-            //anim.SetFloat("JumpHeight", jumpHeight * -2f * gravity);
         }
     }
 
@@ -199,7 +207,7 @@ public class S_PlayerMovement_X : NetworkedBehaviour
 			anim[0].gameObject.SetActive(false);
 			anim[1].gameObject.SetActive(false);
 			gameObject.layer = 10;
-			GetComponent<S_PlayerCanvas_X>().healthBar.gameObject.SetActive(false);
+			GetComponent<S_PlayerCanvas_X>().thirdPersonHealthBar.gameObject.SetActive(false);
 			this.isSpectating = true;
 
 			colliderHeight = cc.height;
@@ -217,7 +225,7 @@ public class S_PlayerMovement_X : NetworkedBehaviour
 				anim[1].gameObject.SetActive(true);
 			}
 			gameObject.layer = 9;
-			GetComponent<S_PlayerCanvas_X>().healthBar.gameObject.SetActive(true);
+			GetComponent<S_PlayerCanvas_X>().thirdPersonHealthBar.gameObject.SetActive(true);
 			this.isSpectating = false;
 
 			cc.height = colliderHeight;

@@ -6,20 +6,33 @@ using MLAPI;
 
 public class S_PlayerCanvas_X : NetworkedBehaviour
 {
-	public Canvas canvas;
-	public Slider healthBar;
+	public Canvas thirdPersonCanvas;
+	public Canvas firstPersonCanvas;
+	public Slider thirdPersonHealthBar;
+	public Slider firstPersonHealthBar;
+	public Slider cooldownIndicator;
 
 	private GameObject[] allPlayers;
+	private S_Player_X localPlayer;
 
 	private void Start()
 	{
+		localPlayer = GetComponent<S_Player_X>();
 		if (IsLocalPlayer)
 		{
-			canvas.gameObject.SetActive(false);
+			thirdPersonCanvas.gameObject.SetActive(false);
+		}
+		else
+		{
+			firstPersonCanvas.gameObject.SetActive(false);
 		}
 
-		healthBar.maxValue = GetComponent<S_Player_X>().playerStats.GetMaxHealth();
-		healthBar.value = healthBar.maxValue;
+		thirdPersonHealthBar.maxValue = localPlayer.playerStats.GetMaxHealth();
+		thirdPersonHealthBar.value = thirdPersonHealthBar.maxValue;
+		
+		firstPersonHealthBar.maxValue = localPlayer.playerStats.GetMaxHealth();
+		firstPersonHealthBar.value = firstPersonHealthBar.maxValue;
+		cooldownIndicator.maxValue = localPlayer.spellSettings.GetCastTime();
 	}
 
 	private void Update()
@@ -30,8 +43,12 @@ public class S_PlayerCanvas_X : NetworkedBehaviour
 		{
 			foreach (GameObject p in allPlayers)
 			{
-				p.GetComponent<S_PlayerCanvas_X>().canvas.transform.LookAt(transform);
+				p.GetComponent<S_PlayerCanvas_X>().thirdPersonCanvas.transform.LookAt(transform);
 			}
+
+			
+			cooldownIndicator.value = GetComponent<S_PlayerMovement_X>().cooldownTime;
+			firstPersonHealthBar.value = localPlayer.Health;
 		}
 	}
 }
