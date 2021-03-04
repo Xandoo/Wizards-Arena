@@ -17,7 +17,7 @@ MonoBehaviour:
   spectatingMaxPlayers: 2
   allyMaterial: {fileID: 2100000, guid: 2023f7af4b3622e4f8cba098c2589e65, type: 2}
   enemyMaterial: {fileID: 2100000, guid: 6ac271d705f1c6945aa23a1eea0c4507, type: 2}
-  preMatchTimer: 2
-  matchTime: 60
+  preMatchTimer: 15
+  matchTime: 240
   respawnTime: 3
   scoreToWin: 10

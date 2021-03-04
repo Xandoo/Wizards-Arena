@@ -9,6 +9,7 @@ public abstract class S_GameMode_X : NetworkedBehaviour
 {
 	public enum GameModeState
 	{
+		NONE,
 		PREMATCH,
 		MATCH,
 		END

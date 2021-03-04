@@ -76,6 +76,7 @@ public class MenuScript : NetworkedBehaviour
 		{
 			S_GameManager_X.Singleton.isPaused = !S_GameManager_X.Singleton.isPaused;
 			Cursor.lockState = CursorLockMode.None;
+			Cursor.visible = true;
 			pausePanel.SetActive(true);
 			gameHud.SetActive(false);
 		}
@@ -83,6 +84,7 @@ public class MenuScript : NetworkedBehaviour
 		{
 			S_GameManager_X.Singleton.isPaused = !S_GameManager_X.Singleton.isPaused;
 			Cursor.lockState = CursorLockMode.Locked;
+			Cursor.visible = false;
 			pausePanel.SetActive(false);
 			gameHud.SetActive(true);
 		}
@@ -111,6 +113,8 @@ public class MenuScript : NetworkedBehaviour
 						
 						break;
 					case S_GameMode_X.GameModeState.END:
+						InvokeClientRpcOnEveryone(UpdateClientUITime, "00:00");
+						UpdateClientsScore(0, 0);
 						break;
 				}
 			}

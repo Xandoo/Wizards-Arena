@@ -33,6 +33,8 @@ public class S_PlayerMovement_X : NetworkedBehaviour
     private S_Player_X player;
     [SerializeField]
     private Animator[] anim;
+	[SerializeField]
+	private AnimationClip attackAnimationClip;
 
     private float pitch;
     public float cooldownTime;
@@ -55,9 +57,9 @@ public class S_PlayerMovement_X : NetworkedBehaviour
             cc = GetComponent<CharacterController>();
             player = GetComponent<S_Player_X>();
 			Cursor.lockState = CursorLockMode.Locked;
+			Cursor.visible = false;
 			cooldownTime = player.spellSettings.GetCastTime();
 		}
-		
         //anim = GetComponentsInChildren<Animator>();
     }
 
@@ -117,7 +119,8 @@ public class S_PlayerMovement_X : NetworkedBehaviour
             {
                 anim[0].SetTrigger("Attack");
                 anim[1].SetTrigger("Attack");
-                cooldownTime = 0f;
+
+				cooldownTime = 0f;
 				StartCoroutine(player.CastSpell());
             }
         }

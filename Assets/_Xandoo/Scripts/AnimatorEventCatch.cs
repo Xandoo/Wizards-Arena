@@ -4,25 +4,18 @@ using UnityEngine;
 using MLAPI;
 using MLAPI.Messaging;
 
-public class AnimatorEventCatch : NetworkedBehaviour
+public class AnimatorEventCatch : MonoBehaviour
 {
-    public S_Player_X player;
+    public Animator anim;
+	public S_Player_X player;
 
-    void CastSpell()
-    {
-        if (!IsHost)
-        {
-            InvokeServerRpc(RequestCastSpellOnServer);
-        }
-        else
-        {
-            player.CastSpell();
-        }
-    }
+    void SetAnimSpeedToCastTime()
+	{
+		anim.speed += player.spellSettings.GetCastTime();
+	}
 
-    [ServerRPC]
-    void RequestCastSpellOnServer()
-    {
-        player.CastSpell();
-    }
+	void ResetAnimSpeed()
+	{
+		anim.speed = 1f;
+	}
 }

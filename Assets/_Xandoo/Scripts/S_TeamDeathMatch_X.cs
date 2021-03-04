@@ -23,7 +23,7 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 	private bool teamSelect = true;
 	private bool isRunning = false;
 
-	private float timeElapsed = 0f;
+	//private float timeElapsed = 0f;
 	public float preMatchTimer = 0f;
 	public float matchTimer = 0f;
 
@@ -31,9 +31,10 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 	public int teamBEleminations = 0;
 	public bool winningTeam;
 
-	public GameModeState gameModeState;
+	public GameModeState gameModeState = GameModeState.NONE;
 
 	public event Action<int, int> OnScoreChanged;
+	private bool doOnce = true;
 
 	private void Start()
 	{
@@ -42,9 +43,16 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 		spectating = new List<ulong>(tdmSettings.spectatingMaxPlayers);
 		teamASpawn = new List<S_SpawnPoint_X>();
 		teamBSpawn = new List<S_SpawnPoint_X>();
+		teamAEleminations = 0;
+		teamBEleminations = 0;
+		OnScoreChanged?.Invoke(teamAEleminations, teamBEleminations);
 
 		preMatchTimer = tdmSettings.preMatchTimer;
 		matchTimer = tdmSettings.matchTime;
+
+		doOnce = true;
+
+		gameModeState = GameModeState.NONE;
 
 		foreach (S_SpawnPoint_X point in spawnPoints)
 		{
@@ -84,60 +92,91 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 						{
 							winningTeam = true;
 							gameModeState = GameModeState.END;
+							InvokeClientRpcOnEveryone(UpdateClientGameState, GameModeState.END);
 						}
 
 						if (teamBEleminations >= tdmSettings.scoreToWin)
 						{
 							winningTeam = false;
 							gameModeState = GameModeState.END;
+							InvokeClientRpcOnEveryone(UpdateClientGameState, GameModeState.END);
 						}
 
 						if (matchTimer <= 0f)
 						{
 							gameModeState = GameModeState.END;
+							InvokeClientRpcOnEveryone(UpdateClientGameState, GameModeState.END);
 						}
 
 						break;
 					case GameModeState.END:
-						ResetGameMode();
-						BalanceTeams();
+						if (doOnce)
+						{
+							doOnce = false;
+							ResetGameMode();
+							InvokeClientRpcOnEveryone(ResetGameMode);
+							BalanceTeams();
 
-						InvokeClientRpcOnEveryone(ShowWinScreenToClients, winningTeam);
-						ResetPlayers();
+							ShowWinScreen(winningTeam);
+							ResetPlayers();
+						}
 						break;
 				}
 
-				timeElapsed += Time.deltaTime;
+				//timeElapsed += Time.deltaTime;
 			}
 		}
 	}
 
 	[ClientRPC]
-	private void ShowWinScreenToClients(bool winningTeam)
+	void UpdateClientGameState(GameModeState gameState)
 	{
-		if (IsLocalPlayer)
+		gameModeState = gameState;
+	}
+
+	private void ShowWinScreen(bool winningTeam)
+	{
+		foreach (NetworkedClient item in NetworkingManager.Singleton.ConnectedClientsList)
 		{
-			S_Player_X player = S_GameManager_X.Singleton.GetPlayerFromClientId(OwnerClientId);
-			player.GetComponent<S_PlayerCanvas_X>().EndScreenPanel.SetActive(true);
-			if (winningTeam)
-			{
-				player.GetComponent<S_PlayerCanvas_X>().EndScreenText.text = "Team A Wins";
-			}
-			else
-			{
-				player.GetComponent<S_PlayerCanvas_X>().EndScreenText.text = "Team B Wins";
-			}
+			//S_Player_X player = item.PlayerObject.GetComponent<S_Player_X>();
+			InvokeClientRpcOnClient(ShowWinScreenToClient, item.ClientId, item.PlayerObject.GetComponent<S_Player_X>(), winningTeam);
 		}
+		
 	}
 
 	[ClientRPC]
-	private void HideWinScreenToClients()
+	private void ShowWinScreenToClient(S_Player_X player, bool winningTeam)
 	{
-		if (IsLocalPlayer)
+		NetworkingManager.Singleton.ConnectedClientsList.ForEach(delegate (NetworkedClient c)
 		{
-			S_Player_X player = S_GameManager_X.Singleton.GetPlayerFromClientId(OwnerClientId);
-			player.GetComponent<S_PlayerCanvas_X>().EndScreenPanel.SetActive(false);
+			Debug.LogWarning(c);
+		});
+
+		player.GetComponent<S_PlayerCanvas_X>().EndScreenPanel.SetActive(true);
+		if (winningTeam)
+		{
+			player.GetComponent<S_PlayerCanvas_X>().EndScreenText.text = "Team A Wins";
 		}
+		else
+		{
+			player.GetComponent<S_PlayerCanvas_X>().EndScreenText.text = "Team B Wins";
+		}
+	}
+
+	private void HideWinScreen()
+	{
+		foreach (NetworkedClient item in NetworkingManager.Singleton.ConnectedClientsList)
+		{
+			//S_Player_X player = item.PlayerObject.GetComponent<S_Player_X>();
+			InvokeClientRpcOnClient(HideWinScreenToClient, item.ClientId, item.PlayerObject.GetComponent<S_Player_X>());
+		}
+
+	}
+
+	[ClientRPC]
+	private void HideWinScreenToClient(S_Player_X player)
+	{
+		player.GetComponent<S_PlayerCanvas_X>().EndScreenPanel.SetActive(false);
 	}
 
 	private void ResetPlayers()
@@ -146,11 +185,18 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 
 		foreach (NetworkedClient client in clients)
 		{
-			S_Player_X player = S_GameManager_X.Singleton.GetPlayerFromClientId(client.ClientId);
-			player.GetComponent<S_PlayerMovement_X>().SetIsSpectating(true);
-			RespawnPlayer(player);
+			S_Player_X player = client.PlayerObject.GetComponent<S_Player_X>();
+			
+			InvokeClientRpcOnClient(ResetPlayerOnClient, client.ClientId, player);
 		}
 
+	}
+
+	[ClientRPC]
+	private void ResetPlayerOnClient(S_Player_X player)
+	{
+		player.GetComponent<S_PlayerMovement_X>().SetIsSpectating(true);
+		RespawnPlayer(player);
 	}
 
 	public override void PlayerConnected(ulong clientObj)
@@ -253,6 +299,7 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 		gameModeState = GameModeState.PREMATCH;
 	}
 
+	[ClientRPC]
 	public override void ResetGameMode()
 	{
 		Start();
@@ -462,9 +509,10 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 			SetPlayerPosition(player, teamBSpawn[randomNumber].transform.position, teamBSpawn[randomNumber].transform.rotation);
 		}
 		player.GetComponent<S_PlayerMovement_X>().SetIsSpectating(false);
-		if (!isRunning && IsHost)
+
+		if ((gameModeState == GameModeState.NONE || gameModeState == GameModeState.END) && IsHost)
 		{
-			InvokeClientRpcOnEveryone(HideWinScreenToClients);
+			HideWinScreen();
 		}
 	}
 }
