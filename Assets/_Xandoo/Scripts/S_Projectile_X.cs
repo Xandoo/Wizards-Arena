@@ -81,10 +81,6 @@ public class S_Projectile_X : NetworkedBehaviour
 					S_Player_X damagedPlayer = S_GameManager_X.Singleton.GetPlayerFromClientId(playerClientId);
 					S_Player_X attackingPlayer = S_GameManager_X.Singleton.GetPlayerFromClientId(Owner);
 
-					if (damagedPlayer.GetComponent<NetworkedObject>().IsOwnedByServer)
-					{
-						Debug.Log("Damaged player is owned by the server");
-					}	
 					InvokeClientRpcOnEveryone(DamagePlayer, damagedPlayer, attackingPlayer);
 				}
 			}

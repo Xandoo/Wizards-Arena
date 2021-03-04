@@ -99,12 +99,58 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 
 						break;
 					case GameModeState.END:
+						ResetGameMode();
+						BalanceTeams();
+
+						InvokeClientRpcOnEveryone(ShowWinScreenToClients, winningTeam);
+						ResetPlayers();
 						break;
 				}
 
 				timeElapsed += Time.deltaTime;
 			}
 		}
+	}
+
+	[ClientRPC]
+	private void ShowWinScreenToClients(bool winningTeam)
+	{
+		if (IsLocalPlayer)
+		{
+			S_Player_X player = S_GameManager_X.Singleton.GetPlayerFromClientId(OwnerClientId);
+			player.GetComponent<S_PlayerCanvas_X>().EndScreenPanel.SetActive(true);
+			if (winningTeam)
+			{
+				player.GetComponent<S_PlayerCanvas_X>().EndScreenText.text = "Team A Wins";
+			}
+			else
+			{
+				player.GetComponent<S_PlayerCanvas_X>().EndScreenText.text = "Team B Wins";
+			}
+		}
+	}
+
+	[ClientRPC]
+	private void HideWinScreenToClients()
+	{
+		if (IsLocalPlayer)
+		{
+			S_Player_X player = S_GameManager_X.Singleton.GetPlayerFromClientId(OwnerClientId);
+			player.GetComponent<S_PlayerCanvas_X>().EndScreenPanel.SetActive(false);
+		}
+	}
+
+	private void ResetPlayers()
+	{
+		List<NetworkedClient> clients = NetworkingManager.Singleton.ConnectedClientsList;
+
+		foreach (NetworkedClient client in clients)
+		{
+			S_Player_X player = S_GameManager_X.Singleton.GetPlayerFromClientId(client.ClientId);
+			player.GetComponent<S_PlayerMovement_X>().SetIsSpectating(true);
+			RespawnPlayer(player);
+		}
+
 	}
 
 	public override void PlayerConnected(ulong clientObj)
@@ -211,7 +257,7 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 	{
 		Start();
 		SetDoorsActive(true);
-		teamSelect = false;
+		teamSelect = true;
 		isRunning = false;
 	}
 
@@ -378,7 +424,7 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 
 	public override void RespawnPlayer(S_Player_X player)
 	{
-		if (IsOwner)
+		if (IsOwner && isRunning)
 		{
 			InvokeServerRpc(IncreaseScore, player);
 		}
@@ -416,5 +462,9 @@ public class S_TeamDeathMatch_X : S_GameMode_X
 			SetPlayerPosition(player, teamBSpawn[randomNumber].transform.position, teamBSpawn[randomNumber].transform.rotation);
 		}
 		player.GetComponent<S_PlayerMovement_X>().SetIsSpectating(false);
+		if (!isRunning && IsHost)
+		{
+			InvokeClientRpcOnEveryone(HideWinScreenToClients);
+		}
 	}
 }

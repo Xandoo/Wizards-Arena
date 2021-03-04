@@ -12,6 +12,9 @@ public class S_PlayerCanvas_X : NetworkedBehaviour
 	public Slider firstPersonHealthBar;
 	public Slider cooldownIndicator;
 
+	public GameObject EndScreenPanel;
+	public Text EndScreenText;
+
 	private GameObject[] allPlayers;
 	private S_Player_X localPlayer;
 
