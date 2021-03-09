@@ -211,6 +211,7 @@ public class S_PlayerMovement_X : NetworkedBehaviour
 			anim[1].gameObject.SetActive(false);
 			gameObject.layer = 10;
 			GetComponent<S_PlayerCanvas_X>().thirdPersonHealthBar.gameObject.SetActive(false);
+			GetComponent<S_PlayerCanvas_X>().gameHud.SetActive(false);
 			this.isSpectating = true;
 
 			colliderHeight = cc.height;

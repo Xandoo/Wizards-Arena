@@ -13,6 +13,7 @@ public class S_GameManager_X : NetworkedBehaviour
 	public static S_GameManager_X Singleton { get { return _singleton; } }
 
 	public S_GameMode_X gameMode;
+	public GameObject MenuPanel;
 
 	public bool gameRunning = false;
 	public bool isPaused = false;

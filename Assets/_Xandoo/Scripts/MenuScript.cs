@@ -10,20 +10,11 @@ using MLAPI.Transports.Tasks;
 public class MenuScript : NetworkedBehaviour
 {
 	public GameObject menuPanel;
-	public GameObject pausePanel;
-	public GameObject gameHud;
-
-	public Button startGameButton;
-	public Text timerText;
-	public Text teamAScoreText;
-	public Text teamBScoreText;
-	private S_TeamDeathMatch_X gameMode;
 
 	public void Host()
 	{
 		NetworkingManager.Singleton.StartHost();
 		menuPanel.SetActive(false);
-		gameHud.SetActive(true);
 		S_GameManager_X.Singleton.gameRunning = true;
 	}
 
@@ -31,31 +22,7 @@ public class MenuScript : NetworkedBehaviour
 	{
 		NetworkingManager.Singleton.StartClient();
 		menuPanel.SetActive(false);
-		gameHud.SetActive(true);
 		S_GameManager_X.Singleton.gameRunning = true;
-		startGameButton.gameObject.SetActive(false);
-	}
-
-	public void Disconnect()
-	{
-		if (IsHost)
-		{
-			NetworkingManager.Singleton.StopHost();
-		}
-		else if (IsClient)
-		{
-			NetworkingManager.Singleton.StopClient();
-		}
-
-		S_GameManager_X.Singleton.ResetGame();
-		timerText.text = "00:00";
-		teamAScoreText.text = "00";
-		teamBScoreText.text = "00";
-		menuPanel.SetActive(true);
-		pausePanel.SetActive(false);
-		S_GameManager_X.Singleton.gameRunning = false;
-		S_GameManager_X.Singleton.isPaused = false;
-
 	}
 
 	public void SetIP(string ip)
@@ -63,79 +30,28 @@ public class MenuScript : NetworkedBehaviour
 		NetworkingManager.Singleton.GetComponent<UnetTransport>().ConnectAddress = ip;
 	}
 
-	public void StartGameMode()
-	{
-		S_GameManager_X.Singleton.StartGameMode();
-		gameMode = (S_TeamDeathMatch_X)S_GameManager_X.Singleton.gameMode;
-		gameMode.OnScoreChanged += UpdateScore;
-	}
-
 	private void Update()
 	{
-		if (Input.GetButtonDown("Pause") && S_GameManager_X.Singleton.gameRunning && !S_GameManager_X.Singleton.isPaused)
-		{
-			S_GameManager_X.Singleton.isPaused = !S_GameManager_X.Singleton.isPaused;
-			Cursor.lockState = CursorLockMode.None;
-			Cursor.visible = true;
-			pausePanel.SetActive(true);
-			gameHud.SetActive(false);
-		}
-		else if (Input.GetButtonDown("Pause"))
-		{
-			S_GameManager_X.Singleton.isPaused = !S_GameManager_X.Singleton.isPaused;
-			Cursor.lockState = CursorLockMode.Locked;
-			Cursor.visible = false;
-			pausePanel.SetActive(false);
-			gameHud.SetActive(true);
-		}
-
-		if (IsHost)
-		{
-			if (S_GameManager_X.Singleton.gameModeRunning)
-			{
-				string min = "";
-				string sec = "";
-				switch (gameMode.gameModeState)
-				{
-
-					case S_GameMode_X.GameModeState.PREMATCH:
-						min = Mathf.Floor(gameMode.preMatchTimer / 60).ToString("00");
-						sec = (gameMode.preMatchTimer % 60).ToString("00");
-						UpdateClientUITime(string.Format("{0}:{1}", min, sec));
-						InvokeClientRpcOnEveryone(UpdateClientUITime, string.Format("{0}:{1}", min, sec));
-
-						break;
-					case S_GameMode_X.GameModeState.MATCH:
-						min = Mathf.Floor(gameMode.matchTimer / 60).ToString("00");
-						sec = (gameMode.matchTimer % 60).ToString("00");
-						UpdateClientUITime(string.Format("{0}:{1}", min, sec));
-						InvokeClientRpcOnEveryone(UpdateClientUITime, string.Format("{0}:{1}", min, sec));
-						
-						break;
-					case S_GameMode_X.GameModeState.END:
-						InvokeClientRpcOnEveryone(UpdateClientUITime, "00:00");
-						UpdateClientsScore(0, 0);
-						break;
-				}
-			}
-		}
+		
 	}
 
-	public void UpdateScore(int a, int b)
+	public void Quit()
 	{
-		InvokeClientRpcOnEveryone(UpdateClientsScore, a, b);
+		Application.Quit();
 	}
 
-	[ClientRPC]
-	void UpdateClientUITime(string time)
+	public void FullScreen()
 	{
-		timerText.text = time;
+		Screen.SetResolution(1920, 1080, true);
 	}
 
-	[ClientRPC]
-	void UpdateClientsScore(int a, int b)
+	public void Winodwed()
 	{
-		teamAScoreText.text = a.ToString("00");
-		teamBScoreText.text = b.ToString("00");
+		Screen.SetResolution(960, 540, false);
+	}
+
+	public void ClearPlayerPref()
+	{
+		PlayerPrefs.DeleteAll();
 	}
 }
